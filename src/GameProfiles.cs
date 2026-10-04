@@ -9,15 +9,14 @@ internal static class GameProfiles
         {
             Name = "Red Alert 2",
             ProcessName = "game", // 不带 .exe；如有不同，以任务管理器为准。
-            Address = 0x00A83D4C,
+            Address = 0x1B70CC1C,
             ModuleRelative = false,
-            Offsets = [0x30C]
+            Offsets = []
         },
         new()
         {
             Name = "Yuri’s Revenge",
             ProcessName = "gamemd",
-            // 参考 AdjWang v4.2，尚未在你的 Steam 游戏中实测。
             Address = 0x00A83D4C,
             ModuleRelative = false,
             Offsets = [0x30C]
