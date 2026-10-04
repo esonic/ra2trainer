@@ -3,25 +3,30 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Ra2MoneyTrainer;
 
 internal sealed class MainForm : Form
 {
+    private const int MoneyHotkeyId = 1, WmHotkey = 0x0312;
+    private const uint ModControl = 0x0002, ModNoRepeat = 0x4000;
     private readonly Label state = new() { AutoSize = true, MaximumSize = new Size(400, 0) };
     private readonly Label current = new() { AutoSize = true, Text = "Current money: —" };
     private readonly Label result = new() { AutoSize = true, MaximumSize = new Size(400, 0) };
+    private readonly Label hotkey = new() { AutoSize = true, MaximumSize = new Size(400, 0) };
     private readonly NumericUpDown amount = new() { Minimum = 0, Maximum = int.MaxValue, Value = 100000, ThousandsSeparator = true, Width = 170 };
     private readonly Button apply = new() { Text = "Set money", AutoSize = true, Enabled = false };
     private readonly System.Windows.Forms.Timer timer = new() { Interval = 3000 };
     private string? identity;
+    private bool hotkeyRegistered;
 
     public MainForm()
     {
         Text = "Red Alert 2 Trainer";
         Font = new Font("Segoe UI", 10);
         AutoScaleMode = AutoScaleMode.Dpi;
-        ClientSize = new Size(440, 200);
+        ClientSize = new Size(440, 260);
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
@@ -32,7 +37,7 @@ internal sealed class MainForm : Form
         valueRow.Controls.Add(new Label { Text = "Amount:", AutoSize = true, Padding = new Padding(0, 5, 0, 0) });
         valueRow.Controls.Add(amount);
         valueRow.Controls.Add(apply);
-        layout.Controls.AddRange(new Control[] { state, current, valueRow, result });
+        layout.Controls.AddRange(new Control[] { state, current, valueRow, hotkey, result });
         foreach (Control control in layout.Controls) control.Margin = new Padding(0, 0, 0, 12);
         Controls.Add(layout);
 
@@ -41,6 +46,42 @@ internal sealed class MainForm : Form
         FormClosed += (_, _) => timer.Dispose();
         RefreshState();
         timer.Start();
+    }
+
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+        hotkeyRegistered = RegisterHotKey(Handle, MoneyHotkeyId,
+            ModControl | ModNoRepeat, (uint)Keys.NumPad1);
+        if (hotkeyRegistered)
+            hotkey.Text = "Global hotkey: Ctrl + Num 1 (Num Lock on)";
+        else
+        {
+            int error = Marshal.GetLastWin32Error();
+            hotkey.Text = $"Ctrl + Num 1 unavailable (Windows error {error}). " +
+                "Another app may be using it. Set money still works.";
+        }
+    }
+
+    protected override void OnHandleDestroyed(EventArgs e)
+    {
+        if (hotkeyRegistered)
+        {
+            UnregisterHotKey(Handle, MoneyHotkeyId);
+            hotkeyRegistered = false;
+        }
+        base.OnHandleDestroyed(e);
+    }
+
+    protected override void WndProc(ref Message m)
+    {
+        if (m.Msg == WmHotkey && m.WParam == new IntPtr(MoneyHotkeyId) && hotkeyRegistered)
+        {
+            // Reuse the button's game/player checks without activating the trainer window.
+            WriteMoney();
+            return;
+        }
+        base.WndProc(ref m);
     }
 
     private static (Process Process, GameProfile Profile) FindGame()
@@ -121,4 +162,12 @@ internal sealed class MainForm : Form
         RefreshState();
         result.Text = message;
     }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool RegisterHotKey(IntPtr window, int id, uint modifiers, uint key);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool UnregisterHotKey(IntPtr window, int id);
 }
