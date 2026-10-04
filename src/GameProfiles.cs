@@ -9,9 +9,9 @@ internal static class GameProfiles
         {
             Name = "Red Alert 2",
             ProcessName = "game", // 不带 .exe；如有不同，以任务管理器为准。
-            Address = 0x1B70CC1C,
-            ModuleRelative = false,
-            Offsets = []
+            Address = 0x635DB4,
+            ModuleRelative = true,
+            Offsets = [0x24C]
         },
         new()
         {
