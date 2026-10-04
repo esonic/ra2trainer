@@ -14,10 +14,10 @@ internal sealed class MainForm : Form
 
     public MainForm()
     {
-        Text = "Red Alert 2 · Money Trainer";
+        Text = "Red Alert 2 Trainer";
         Font = new Font("Segoe UI", 10);
         AutoScaleMode = AutoScaleMode.Dpi;
-        ClientSize = new Size(440, 210);
+        ClientSize = new Size(440, 180);
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
