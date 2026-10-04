@@ -59,30 +59,41 @@ internal sealed class MainForm : Form
 
     private void RefreshState()
     {
-        apply.Enabled = false;
+        // Compute the next state first, so polling never briefly disables a ready button
+        // or replaces an error with "Connected" before the memory read has succeeded.
+        bool ready = false;
+        string nextState;
+        string nextCurrent;
+        bool clearResult;
         try
         {
             var game = FindGame();
             using var process = game.Process;
-            state.Text = $"Connected: {game.Profile.Name}";
             if (game.Profile.Address is null)
                 throw new InvalidOperationException($"{game.Profile.Name}: Set the address in GameProfiles.cs first.");
             using var memory = new GameMemory(process, game.Profile, writable: false);
             var money = memory.ReadMoney();
             if (money.Amount < 0) throw new InvalidOperationException("Invalid money value. Check the address.");
             string newIdentity = GetIdentity(process, money.Address);
-            if (identity != newIdentity) result.Text = "";
+            clearResult = identity != newIdentity;
             identity = newIdentity;
-            current.Text = $"Current money: {money.Amount:N0}";
-            apply.Enabled = true;
+            nextState = $"Connected: {game.Profile.Name}";
+            nextCurrent = $"Current money: {money.Amount:N0}";
+            ready = true;
         }
         catch (Exception ex)
         {
             identity = null;
-            result.Text = "";
-            state.Text = ex.Message;
-            current.Text = "Current money: —";
+            clearResult = true;
+            nextState = ex.Message;
+            nextCurrent = "Current money: —";
         }
+
+        // Update only changed properties; unchanged polls should cause no repaint.
+        if (state.Text != nextState) state.Text = nextState;
+        if (current.Text != nextCurrent) current.Text = nextCurrent;
+        if (clearResult && result.Text.Length != 0) result.Text = "";
+        if (apply.Enabled != ready) apply.Enabled = ready;
     }
 
     private void WriteMoney()
