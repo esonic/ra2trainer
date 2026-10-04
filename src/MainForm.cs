@@ -17,7 +17,7 @@ internal sealed class MainForm : Form
         Text = "Red Alert 2 Trainer";
         Font = new Font("Segoe UI", 10);
         AutoScaleMode = AutoScaleMode.Dpi;
-        ClientSize = new Size(440, 180);
+        ClientSize = new Size(440, 200);
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
