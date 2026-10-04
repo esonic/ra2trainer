@@ -1,65 +1,78 @@
-# 红警2金钱修改器
+# Red Alert 2 Money Trainer
 
-C# + WinForms，仅提供一次性设置金钱。界面全部使用英文，只有游戏状态、当前金额、目标金额和修改按钮。面向 Windows 11 x64，目标游戏为 32 位 x86。
+一个极简的红色警戒2金钱修改器，支持 Steam 版《红色警戒2》和《尤里的复仇》。使用 C# + WinForms 开发，界面为英文。
 
-## 使用方式
+## 使用
 
-修改器和游戏的启动顺序不限。程序启动时立即探测，之后每 3 秒探测一次：`game.exe` 识别为红色警戒2，`gamemd.exe` 识别为尤里的复仇。游戏退出后恢复等待，下次启动会重新连接，无需手动选择游戏。如果两款游戏同时运行或检测到多个匹配进程，会提示只保留一个。
+运行环境：Windows 11 x64。
 
-进入单人战局且能读取金额后，修改按钮自动可用。输入目标金额并点击即可，没有核对复选框。金额每 3 秒刷新，但只在点击时写入。若游戏以管理员身份运行而出现访问拒绝，请也以管理员身份运行修改器。
+1. 运行 `Ra2MoneyTrainer.exe`，启动游戏并进入单人战局，启动顺序不限。
+2. 程序自动识别游戏并显示当前金额。
+3. 在 **Amount** 中输入目标金额，点击 **Set money**。
 
-## 地址修改
+程序每 3 秒探测游戏并刷新金额。修改为一次性设置，不会锁定金额。游戏退出后会继续等待下次启动；请只运行一个游戏实例。
 
-所有地址集中在 `src/GameProfiles.cs`，修改后重新编译。
+依赖运行时的发布版本需要安装 **.NET 10 Desktop Runtime x64**，自包含版本无需额外安装 .NET。若提示访问权限不足，且游戏以管理员身份运行，请也以管理员身份运行修改器。
 
-- 红色警戒2：`Address = null`，地址尚未确认，填写实际地址后才能改钱。
-- 尤里的复仇：`Address = 0x00A83D4C`，`Offsets = [0x30C]`。
-- 进程名也在该文件中，若安装版本不同，请按任务管理器“详细信息”页修改，不带 `.exe`。
+仅用于单人战役和遭遇战。其他版本或 MOD 可能需要调整地址。
 
-### 直接金钱地址
+## 开发与构建
 
-把 CE 找到的实际地址填入 `Address`，设置 `ModuleRelative = false` 和 `Offsets = []`。例如下面仅演示写法，地址不是实际游戏地址：
+安装 .NET 10 SDK；使用 Visual Studio 时，需支持 .NET 10 并安装“.NET 桌面开发”工作负载。
 
-```csharp
-Address = 0x12345678,
-ModuleRelative = false,
-Offsets = []
-```
-
-直接地址可能在重启、读档或换关后失效，建议定位稳定的指针链。
-
-### 玩家指针加偏移
-
-尤里的默认地址表示 `读取32位指针(0x00A83D4C) + 0x30C`。多个偏移按从基地址到最终字段的访问顺序填写；`Offsets = [0x10, 0x20]` 表示 `读取指针(读取指针(Address) + 0x10) + 0x20`。CE 界面可能把最终字段偏移显示在最上方，请按访问顺序转换。
-
-### 模块相对地址
-
-如果 CE 显示 `gamemd.exe+偏移`，把偏移填入 `Address`，设置 `ModuleRelative = true`，程序会加上所选游戏主 EXE 的基址。剩余指针链填写到 `Offsets`；若该位置本身就是金钱字段，使用空数组。仅支持主 EXE 模块，不支持其他 DLL 基址。
-
-## Windows 构建
-
-安装支持 .NET 10 的 Visual Studio 和“.NET 桌面开发”工作负载，打开 `src/Ra2MoneyTrainer.csproj`，选择 Release 后生成，或按 F5 调试。普通生成的输出在 `src/bin/Release/net10.0-windows/`。
-
-也可以使用 .NET 10 SDK 命令行生成：
+在 Visual Studio 中打开 `src/Ra2MoneyTrainer.slnx` 或 `src/Ra2MoneyTrainer.csproj`，即可生成或调试。也可在项目根目录执行：
 
 ```powershell
 dotnet build src/Ra2MoneyTrainer.csproj -c Release
 ```
 
-小体积单文件发布（运行电脑需安装 .NET 10 Desktop Runtime x64）：
+输出目录：`src/bin/Release/net10.0-windows/`。
+
+### VS Code 发布
+
+在 VS Code 中打开项目根目录，按 `Ctrl+Shift+B` 默认执行 **Publish single EXE (small)**，输出到 `artifacts/win-x64-small/`。该版本需要 .NET 10 Desktop Runtime x64。
+
+如需包含运行时，执行“终端 → 运行任务”，选择 **Publish single EXE (self-contained)**，输出到 `artifacts/win-x64/`。
+
+任务定义在 `.vscode/tasks.json`。分发发布目录里的 `Ra2MoneyTrainer.exe` 即可；普通 `dotnet build` 的输出仍由多个文件组成。
+
+### 命令行发布
+
+小体积单文件版本，需要 .NET 10 Desktop Runtime x64：
 
 ```powershell
 dotnet publish src/Ra2MoneyTrainer.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:DebugType=None -o artifacts/win-x64-small
 ```
 
-自包含单文件发布（运行电脑无需额外安装 .NET）：
+自包含单文件版本，包含运行时：
 
 ```powershell
 dotnet publish src/Ra2MoneyTrainer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -o artifacts/win-x64
 ```
 
-可选的地址逻辑检查：
+## 地址适配
 
-```powershell
-dotnet run --project tests/AddressChecks.csproj
+地址定义在 [src/GameProfiles.cs](src/GameProfiles.cs)，修改后重新编译。当前配置：
+
+| 游戏 | 进程 | 玩家指针入口 | 金钱偏移 |
+|---|---|---|---|
+| Red Alert 2 | `game.exe` | 主 EXE 基址 + `0x635DB4` | `0x24C` |
+| Yuri’s Revenge | `gamemd.exe` | 绝对地址 `0x00A83D4C` | `0x30C` |
+
+程序读取入口处的 32 位指针，再加金钱偏移，得到金钱字段地址。每次操作重新读取指针，不缓存玩家地址。
+
+配置字段：
+
+- `ProcessName`：进程名，不带 `.exe`。
+- `Address`：绝对地址，或主 EXE 模块内偏移。
+- `ModuleRelative`：为 `true` 时，将主 EXE 基址加到 `Address`。
+- `Offsets`：按访问顺序排列；每一步先读取 32 位指针，再加该偏移。空数组表示 `Address` 本身就是金钱字段。
+
+例如原版的定位过程是：
+
+```text
+玩家地址 = ReadUInt32(game.exe 基址 + 0x635DB4)
+金钱地址 = 玩家地址 + 0x24C
 ```
+
+仅支持主 EXE 模块相对地址。使用直接金钱地址时，重启、读档或换关可能使地址失效。适配新版本后，应验证金额读写、重启、换关和读档。
