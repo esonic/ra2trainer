@@ -22,21 +22,21 @@ internal sealed class GameMemory : IDisposable
         handle = OpenProcess(Query | Read | (writable ? Write | Operation : 0), false, process.Id);
         try
         {
-            if (handle.IsInvalid) throw Error("打开游戏进程");
+            if (handle.IsInvalid) throw Error("Open game process");
             if (!IsWow64Process2(handle, out ushort machine, out ushort nativeMachine))
-                throw Error("检测游戏位数");
+                throw Error("Detect game architecture");
             if (machine != 0x014c && !(machine == 0 && nativeMachine == 0x014c))
-                throw new InvalidOperationException("目标不是 32 位 x86 游戏进程，请检查进程名。");
+                throw new InvalidOperationException("Target is not a 32-bit x86 game. Check the process name.");
             if (profile.ModuleRelative)
                 moduleBase = checked((uint)(process.MainModule
-                    ?? throw new InvalidOperationException("无法读取游戏主模块。")).BaseAddress.ToInt64());
+                    ?? throw new InvalidOperationException("Cannot read the main game module.")).BaseAddress.ToInt64());
         }
         catch { handle.Dispose(); throw; }
     }
 
     public (uint Address, int Amount) ReadMoney()
     {
-        if (process.HasExited) throw new InvalidOperationException("游戏已经退出。");
+        if (process.HasExited) throw new InvalidOperationException("The game has exited.");
         uint address = AddressMath.Resolve(profile, moduleBase, ReadUInt32);
         return (address, unchecked((int)ReadUInt32(address)));
     }
@@ -45,32 +45,33 @@ internal sealed class GameMemory : IDisposable
     {
         // Resolve again on every operation; never cache a player pointer across maps/saves.
         var current = ReadMoney();
-        if (current.Amount < 0) throw new InvalidOperationException("读到负数金额，请先校准地址。");
+        if (current.Amount < 0) throw new InvalidOperationException("Money is negative. Check the address.");
         // Recheck immediately before writing to reduce the chance of a stale player pointer.
         if (ReadMoney().Address != current.Address)
-            throw new InvalidOperationException("玩家地址已变化，请等待战局稳定后重试。");
+            throw new InvalidOperationException("Player address changed. Wait for the match to stabilize and try again.");
         byte[] bytes = BitConverter.GetBytes(amount);
         if (!WriteProcessMemory(handle, (nint)current.Address, bytes, 4, out nuint count))
-            throw Error("写入金钱");
-        if (count != 4) throw new IOException("金钱写入不完整。");
+            throw Error("Write money");
+        if (count != 4) throw new IOException("Incomplete money write.");
         if (ReadMoney().Amount != amount)
-            throw new InvalidOperationException("写入后金额发生变化，请在游戏中核对，必要时暂停战局后重试。");
+            throw new InvalidOperationException("Money changed after writing. Check in-game or pause and retry.");
     }
 
     private uint ReadUInt32(uint address)
     {
         byte[] bytes = new byte[4];
         if (!ReadProcessMemory(handle, (nint)address, bytes, 4, out nuint count))
-            throw Error("读取游戏内存");
-        if (count != 4) throw new IOException("内存读取不完整。");
+            throw Error("Read game memory");
+        if (count != 4) throw new IOException("Incomplete memory read.");
         return BitConverter.ToUInt32(bytes);
     }
 
     private static Exception Error(string operation)
     {
         int code = Marshal.GetLastWin32Error();
-        return new Win32Exception(code, $"{operation}失败：{new Win32Exception(code).Message}" +
-            (code == 5 ? "。若游戏以管理员身份运行，请以管理员身份运行修改器。" : "。请检查地址及游戏状态。"));
+        return new Win32Exception(code, $"{operation} failed (Windows error {code}). " +
+            (code == 5 ? "If the game runs as administrator, run this trainer as administrator too."
+                       : "Check the address and game state."));
     }
 
     public void Dispose() => handle.Dispose();

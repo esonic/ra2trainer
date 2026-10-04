@@ -6,6 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../src/Ra2MoneyTrainer/AddressConfig.cs" Link="AddressConfig.cs" />
+    <Compile Include="../src/GameProfiles.cs" Link="GameProfiles.cs" />
   </ItemGroup>
 </Project>
