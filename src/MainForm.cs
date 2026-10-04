@@ -26,7 +26,7 @@ internal sealed class MainForm : Form
         Text = "Red Alert 2 Trainer";
         Font = new Font("Segoe UI", 10);
         AutoScaleMode = AutoScaleMode.Dpi;
-        ClientSize = new Size(440, 260);
+        ClientSize = new Size(430, 250);
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
@@ -54,7 +54,7 @@ internal sealed class MainForm : Form
         hotkeyRegistered = RegisterHotKey(Handle, MoneyHotkeyId,
             ModControl | ModNoRepeat, (uint)Keys.NumPad1);
         if (hotkeyRegistered)
-            hotkey.Text = "Global hotkey: Ctrl + Num 1 (Num Lock on)";
+            hotkey.Text = "Global hotkey: Ctrl + Num 1";
         else
         {
             int error = Marshal.GetLastWin32Error();
