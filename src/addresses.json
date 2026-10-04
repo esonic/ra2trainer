@@ -1,0 +1,20 @@
+{
+  "profiles": [
+    {
+      "name": "红色警戒2",
+      "processNames": ["game"],
+      "address": "",
+      "moduleRelative": false,
+      "offsets": [],
+      "note": "本体地址尚未确认：请用 Cheat Engine 定位后填写。"
+    },
+    {
+      "name": "尤里的复仇",
+      "processNames": ["gamemd"],
+      "address": "0x00A83D4C",
+      "moduleRelative": false,
+      "offsets": ["0x30C"],
+      "note": "地址参考 AdjWang v4.2；尚未在你的 Steam 版本实测。请先核对当前金额。"
+    }
+  ]
+}
