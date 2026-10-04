@@ -2,22 +2,14 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Publish single EXE (small)",
+      "label": "Build Release (.NET Framework 4.8)",
       "type": "process",
       "command": "dotnet",
       "args": [
-        "publish",
+        "build",
         "${workspaceFolder}/src/Ra2MoneyTrainer.csproj",
         "-c",
-        "Release",
-        "-r",
-        "win-x64",
-        "-p:PublishSingleFile=true",
-        "-p:DebugType=None",
-        "--self-contained",
-        "false",
-        "-o",
-        "${workspaceFolder}/artifacts/win-x64-small"
+        "Release"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -25,34 +17,6 @@
       "group": {
         "kind": "build",
         "isDefault": true
-      },
-      "problemMatcher": "$msCompile"
-    },
-    {
-      "label": "Publish single EXE (self-contained)",
-      "type": "process",
-      "command": "dotnet",
-      "args": [
-        "publish",
-        "${workspaceFolder}/src/Ra2MoneyTrainer.csproj",
-        "-c",
-        "Release",
-        "-r",
-        "win-x64",
-        "-p:PublishSingleFile=true",
-        "-p:DebugType=None",
-        "--self-contained",
-        "true",
-        "-p:IncludeNativeLibrariesForSelfExtract=true",
-        "-o",
-        "${workspaceFolder}/artifacts/win-x64"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "group": {
-        "kind": "build",
-        "isDefault": false
       },
       "problemMatcher": "$msCompile"
     }

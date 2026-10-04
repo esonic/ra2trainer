@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -50,9 +52,9 @@ internal sealed class GameMemory : IDisposable
         if (ReadMoney().Address != current.Address)
             throw new InvalidOperationException("Player address changed. Wait for the match to stabilize and try again.");
         byte[] bytes = BitConverter.GetBytes(amount);
-        if (!WriteProcessMemory(handle, (nint)current.Address, bytes, 4, out nuint count))
+        if (!WriteProcessMemory(handle, new IntPtr((long)current.Address), bytes, new UIntPtr(4u), out UIntPtr count))
             throw Error("Write money");
-        if (count != 4) throw new IOException("Incomplete money write.");
+        if (count.ToUInt64() != 4) throw new IOException("Incomplete money write.");
         if (ReadMoney().Amount != amount)
             throw new InvalidOperationException("Money changed after writing. Check in-game or pause and retry.");
     }
@@ -60,10 +62,10 @@ internal sealed class GameMemory : IDisposable
     private uint ReadUInt32(uint address)
     {
         byte[] bytes = new byte[4];
-        if (!ReadProcessMemory(handle, (nint)address, bytes, 4, out nuint count))
+        if (!ReadProcessMemory(handle, new IntPtr((long)address), bytes, new UIntPtr(4u), out UIntPtr count))
             throw Error("Read game memory");
-        if (count != 4) throw new IOException("Incomplete memory read.");
-        return BitConverter.ToUInt32(bytes);
+        if (count.ToUInt64() != 4) throw new IOException("Incomplete memory read.");
+        return BitConverter.ToUInt32(bytes, 0);
     }
 
     private static Exception Error(string operation)
@@ -80,10 +82,10 @@ internal sealed class GameMemory : IDisposable
     private static extern SafeProcessHandle OpenProcess(uint access, [MarshalAs(UnmanagedType.Bool)] bool inherit, int pid);
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool ReadProcessMemory(SafeProcessHandle process, nint address, [Out] byte[] buffer, nuint size, out nuint read);
+    private static extern bool ReadProcessMemory(SafeProcessHandle process, IntPtr address, [Out] byte[] buffer, UIntPtr size, out UIntPtr read);
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool WriteProcessMemory(SafeProcessHandle process, nint address, byte[] buffer, nuint size, out nuint written);
+    private static extern bool WriteProcessMemory(SafeProcessHandle process, IntPtr address, byte[] buffer, UIntPtr size, out UIntPtr written);
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool IsWow64Process2(SafeProcessHandle process, out ushort processMachine, out ushort nativeMachine);

@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Windows.Forms;
 using System.Diagnostics;
 
 namespace Ra2MoneyTrainer;
@@ -28,7 +32,7 @@ internal sealed class MainForm : Form
         valueRow.Controls.Add(new Label { Text = "Amount:", AutoSize = true, Padding = new Padding(0, 5, 0, 0) });
         valueRow.Controls.Add(amount);
         valueRow.Controls.Add(apply);
-        layout.Controls.AddRange([state, current, valueRow, result]);
+        layout.Controls.AddRange(new Control[] { state, current, valueRow, result });
         foreach (Control control in layout.Controls) control.Margin = new Padding(0, 0, 0, 12);
         Controls.Add(layout);
 
